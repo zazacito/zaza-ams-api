@@ -38,12 +38,12 @@ async def get_session_raw_data(request_body: RequestBody):
     except requests.exceptions.RequestException as e:
         return "An error occurred while fetching the session raw data."
 
-if __name__ == "__main__":
-    import os
-    from fastapi.staticfiles import StaticFiles
+# if __name__ == "__main__":
+#     import os
+#     from fastapi.staticfiles import StaticFiles
 
-    # Serve the static files
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+#     # Serve the static files
+#     app.mount("/static", StaticFiles(directory="static"), name="static")
 
-    # Run the application using uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+#     # Run the application using uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
