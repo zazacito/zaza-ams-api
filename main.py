@@ -8,7 +8,7 @@ app = FastAPI()
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://your-github-pages-domain"],
+    allow_origins=["https://zazacito.github.io/zaza-ams-api/"],
     allow_methods=["POST"],
     allow_headers=["*"],
 )
