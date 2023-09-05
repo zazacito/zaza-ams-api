@@ -1,21 +1,17 @@
 const express = require("express");
 const functions = require("firebase-functions");
-const sdk = require('api')('@catapultconnect/v6#1cqn1tlk0fazjq');
-
+const sdk = require('api')('@catapultconnect/v6#dgos2allogj3z8');
+const axios = require('axios');
+const cors = require("cors"); // Import the CORS middleware
 
 const app = express();
-// const port = process.env.PORT || 8000;
-// Commented out as the 'port' variable is not used
 
 app.use(express.json());
 
-// Enable CORS
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST");
-  res.setHeader("Access-Control-Allow-Headers", "*");
-  next();
-});
+
+app.use(cors({
+  origin: ["http://localhost:5173", "https://zaza-ams.web.app"],
+}));
 
 
 app.get("/", (req, res) => {
@@ -39,26 +35,68 @@ app.post("/catapult/sessions", async (req, res) => {
 });
 
 
-app.post("/catapult/sessiondata", async (req, res) => {
+app.post("/catapult/sessionperioddata", async (req, res) => {
   try {
-    const { sessionId, parametersList, source, apiKey } = req.body;
-    sdk.auth(apiKey);
-    sdk.server("https://connect-eu.catapultsports.com/api/v6");
+    const { sessionId, parameters, apiKey } = req.body;
 
-    const { data } = await sdk.postStats({
-      group_by: ['period', 'athlete'],
-      parameters: parametersList,
-      source: source,
-      filters: [{ name: 'activity_id', values: [sessionId], comparison: '=' }]
-    })
-
-    res.json(data);
+    axios
+      .post(`https://connect-eu.catapultsports.com/api/v6/stats`,
+        {
+          "group_by": ["period", "athlete"],
+          "filters": [
+            {
+              "name": "activity_id",
+              "comparison": "=",
+              "values": [sessionId],
+            }
+          ],
+          "parameters": parameters,
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`
+          }
+        })
+      .then((response) => {
+        res.json(response.data);
+      })
 
   } catch (error) {
-    res.status(500).json({ message: "An error occurred while fetching the session data.", error: error });
+    res.status(500).json({ message: 'An error occurred while fetching the period session data.', error: error.message });
   }
 });
 
+app.post('/catapult/sessionannotationdata', async (req, res) => {
+  try {
+    const { sessionId, parameters, apiKey } = req.body;
+
+    axios
+      .post(`https://connect-eu.catapultsports.com/api/v6/stats`,
+        {
+          "group_by": ["annotation", "athlete"],
+          "filters": [
+            {
+              "name": "activity_id",
+              "comparison": "=",
+              "values": [sessionId],
+            }
+          ],
+          "parameters": parameters,
+          "source": "annotation_stats"
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`
+          }
+        })
+      .then((response) => {
+        res.json(response.data);
+      })
+
+  } catch (error) {
+    res.status(500).json({ message: 'An error occurred while fetching the annotation session data.', error: error.message });
+  }
+});
 
 
 
@@ -85,4 +123,4 @@ app.post("/catapult/sessionrawdata", async (req, res) => {
 
 
 
-exports.api = functions.https.onRequest(app);
+exports.api = functions.runWith({ timeoutSeconds: 260 }).https.onRequest(app);

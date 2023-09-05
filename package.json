@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "API ZAZACITO AMS",
   "dependencies": {
-    "api": "^6.1.0"
+    "api": "^6.1.0",
+    "axios": "^1.5.0"
   }
 }
