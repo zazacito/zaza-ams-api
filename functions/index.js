@@ -206,5 +206,36 @@ app.post("/catapult/sessionperiods", async (req, res) => {
 });
 
 
+app.post("/catapult/live/athletes", async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    sdk.auth(apiKey);
+    sdk.server("https://connect-eu.catapultsports.com/api/v6");
+
+    console.log('apiKey', apiKey)
+    const { data } = await sdk.getLiveAthletes();
+
+    res.json(data);
+
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the session live athletes data.", error: error });
+  }
+});
+
+
+app.post("/catapult/live/info", async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    sdk.auth(apiKey);
+    sdk.server("https://connect-eu.catapultsports.com/api/v6");
+
+    const { data } = await sdk.getLiveInfo()
+
+    res.json(data);
+
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the session live info.", error: error });
+  }
+});
 
 exports.api = functions.runWith({ timeoutSeconds: 260 }).https.onRequest(app);
