@@ -25,7 +25,7 @@ app.post("/catapult/sessions", async (req, res) => {
     sdk.auth(apiKey);
     sdk.server("https://connect-eu.catapultsports.com/api/v6");
 
-    const { data } = await sdk.getAllActivities({ start_time: startTime, end_time: endTime })
+    const { data } = await sdk.getAllActivities({ start_time: startTime, end_time: endTime, include: 'actdic_status' })
 
     res.json(data);
 
