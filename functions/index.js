@@ -25,7 +25,7 @@ app.post("/catapult/sessions", async (req, res) => {
     sdk.auth(apiKey);
     sdk.server("https://connect-eu.catapultsports.com/api/v6");
 
-    const { data } = await sdk.getAllActivities({ start_time: startTime, end_time: endTime, include: 'actdic_status' })
+    const { data } = await sdk.getAllActivities({ start_time: startTime, end_time: endTime })
 
     res.json(data);
 
@@ -205,6 +205,23 @@ app.post("/catapult/sessionperiods", async (req, res) => {
   }
 });
 
+app.post("/catapult/sessionDeepDetails", async (req, res) => {
+  try {
+    const { sessionId, apiKey } = req.body;
+    sdk.auth(apiKey);
+    sdk.server("https://connect-eu.catapultsports.com/api/v6");
+
+    const { data } = await sdk.getDeepActivity({ include: 'all', id: sessionId })
+
+    if (data.length > 0) {
+      res.json(data);
+    } else {
+      res.status(404).json({ error: "No deep details found for the session ID." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the session deep details.", error: error });
+  }
+});
 
 app.post("/catapult/live/athletes", async (req, res) => {
   try {
