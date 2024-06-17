@@ -255,4 +255,53 @@ app.post("/catapult/live/info", async (req, res) => {
   }
 });
 
+app.post("/catapult/periodeffortsdata", async (req, res) => {
+  try {
+    const { periodId, athleteId, apiKey } = req.body;
+    sdk.auth(apiKey);
+    sdk.server("https://connect-eu.catapultsports.com/api/v6");
+
+    const { data } = await sdk.getEffortsDataForAthleteInPeriod({
+      effort_types: 'acceleration,velocity',
+      velocity_bands: '6,7,8',
+      acceleration_bands: '-3,3',
+      period_id: periodId,
+      athlete_id: athleteId,
+    })
+
+    if (data.length > 0) {
+      res.json(data[0].data);
+    } else {
+      res.status(404).json({ error: "No period data found for the period ID and athlete ID." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the period efforts data.", error: error });
+  }
+});
+
+app.post("/catapult/periodeventsdata", async (req, res) => {
+  try {
+    const { periodId, athleteId, apiKey } = req.body;
+    sdk.auth(apiKey);
+    sdk.server("https://connect-eu.catapultsports.com/api/v6");
+
+    const { data } = await sdk.getEventsDataForAthleteInPeriod({
+      event_types: 'rugby_union_contact_involvement,rugby_league_tackle,rugby_union_kick',
+      period_id: periodId,
+      athlete_id: athleteId,
+    })
+
+    if (data.length > 0) {
+      res.json(data[0].data);
+    } else {
+      res.status(404).json({ error: "No period data found for the period ID and athlete ID." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the period events data.", error: error });
+  }
+});
+
 exports.api = functions.runWith({ timeoutSeconds: 260 }).https.onRequest(app);
+
+
+
