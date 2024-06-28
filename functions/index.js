@@ -3,6 +3,8 @@ const functions = require("firebase-functions");
 const sdk = require('api')('@catapultconnect/v6#dgos2allogj3z8');
 const axios = require('axios');
 const cors = require("cors"); // Import the CORS middleware
+const nodemailer = require('nodemailer');
+
 
 const app = express();
 
@@ -240,6 +242,8 @@ app.post("/catapult/live/athletes", async (req, res) => {
 });
 
 
+
+
 app.post("/catapult/live/info", async (req, res) => {
   try {
     const { apiKey } = req.body;
@@ -305,3 +309,46 @@ exports.api = functions.runWith({ timeoutSeconds: 260 }).https.onRequest(app);
 
 
 
+// Configure the email transporter using Yahoo SMTP
+const yahooEmail = functions.config().yahoo.email;
+const yahooPassword = functions.config().yahoo.password;
+
+const mailTransport = nodemailer.createTransport({
+  service: 'yahoo',
+  auth: {
+    user: yahooEmail,
+    pass: yahooPassword,
+  },
+});
+
+const recipients = [
+  "prosportconcept@gmail.com",
+  "sebastien.louisp@outlook.fr",
+  "victor.azalbert@playwize.io"
+];
+
+exports.sendEmailOnNewDocument = functions.firestore
+  .document('observations/{docId}')
+  .onCreate((snap, context) => {
+    const obs = snap.data();
+    const emailContent = obs.observation;
+    const emailTitle = obs.athleteName + " " + obs.athleteSurname
+
+    // Join the array of recipient emails into a single string separated by commas
+    const recipientString = recipients.join(',');
+
+    const mailOptions = {
+      from: yahooEmail,
+      to: recipientString, // Send to multiple recipients
+      subject: `Nouvelle Obervsation Concernant ${emailTitle}`,
+      text: `Observation: ${emailContent}. Ajoutée Par ${obs.modifiedBy.userName} ${obs.modifiedBy.userName}`,
+    };
+
+    return mailTransport.sendMail(mailOptions)
+      .then(() => {
+        console.log('New email sent to:', recipientString);
+      })
+      .catch((error) => {
+        console.error('There was an error while sending the email:', error);
+      });
+  });
