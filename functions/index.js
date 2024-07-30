@@ -3,8 +3,7 @@ const functions = require("firebase-functions");
 const sdk = require('api')('@catapultconnect/v6#dgos2allogj3z8');
 const axios = require('axios');
 const cors = require("cors"); // Import the CORS middleware
-const nodemailer = require('nodemailer');
-
+const qs = require('qs'); // Import qs for URL-encoded data
 
 const app = express();
 
@@ -20,6 +19,76 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to the Zazacito API!" });
 });
 
+
+
+async function getAuthToken(clientId, clientSecret) {
+  try {
+    const tokenUrl = `https://security.valdperformance.com/connect/token`;
+    const data = qs.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'client_credentials',
+    });
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+    const response = await axios.post(tokenUrl, data, { headers });
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Error retrieving auth token:', error.response ? error.response.data : error.message);
+    throw new Error('Failed to retrieve auth token');
+  }
+}
+
+// Endpoint to retrieve ForceDecks tests
+const valdApiBaseUrl = "https://prd-euw-api-extforcedecks.valdperformance.com";
+app.post("/vald/forcedecks/tests", async (req, res) => {
+  try {
+    const { clientId, clientSecret, teamUid, startDate, endDate } = req.body;
+
+    if (!clientId || !clientSecret || !teamUid || !startDate || !endDate) {
+      return res.status(400).json({ message: "Missing required parameters." });
+    }
+
+    const token = await getAuthToken(clientId, clientSecret);
+
+    const url = `${valdApiBaseUrl}/v2019q3/teams/${teamUid}/tests/detailed/${startDate}/${endDate}`;
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching ForceDecks tests.", error: error.message });
+  }
+});
+
+app.post("/vald/forcedecks/testDetail", async (req, res) => {
+  try {
+    const { clientId, clientSecret, teamUid, testId } = req.body;
+
+    if (!clientId || !clientSecret || !teamUid || !testId) {
+      return res.status(400).json({ message: "Missing required parameters." });
+    }
+
+    const token = await getAuthToken(clientId, clientSecret);
+
+    const url = `${valdApiBaseUrl}/v2019q3/teams/${teamUid}/tests/${testId}/trials`;
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching ForceDecks test details.", error: error.message });
+  }
+});
 
 app.post("/catapult/sessions", async (req, res) => {
   try {
@@ -308,47 +377,3 @@ app.post("/catapult/periodeventsdata", async (req, res) => {
 exports.api = functions.runWith({ timeoutSeconds: 260 }).https.onRequest(app);
 
 
-
-// Configure the email transporter using Yahoo SMTP
-const yahooEmail = functions.config().yahoo.email;
-const yahooPassword = functions.config().yahoo.password;
-
-const mailTransport = nodemailer.createTransport({
-  service: 'yahoo',
-  auth: {
-    user: yahooEmail,
-    pass: yahooPassword,
-  },
-});
-
-const recipients = [
-  "prosportconcept@gmail.com",
-  "sebastien.louisp@outlook.fr",
-  "victor.azalbert@playwize.io"
-];
-
-exports.sendEmailOnNewDocument = functions.firestore
-  .document('observations/{docId}')
-  .onCreate((snap, context) => {
-    const obs = snap.data();
-    const emailContent = obs.observation;
-    const emailTitle = obs.athleteName + " " + obs.athleteSurname
-
-    // Join the array of recipient emails into a single string separated by commas
-    const recipientString = recipients.join(',');
-
-    const mailOptions = {
-      from: yahooEmail,
-      to: recipientString, // Send to multiple recipients
-      subject: `Nouvelle Obervsation Concernant ${emailTitle}`,
-      text: `Observation: ${emailContent}. Ajoutée Par ${obs.modifiedBy.userName} ${obs.modifiedBy.userName}`,
-    };
-
-    return mailTransport.sendMail(mailOptions)
-      .then(() => {
-        console.log('New email sent to:', recipientString);
-      })
-      .catch((error) => {
-        console.error('There was an error while sending the email:', error);
-      });
-  });
