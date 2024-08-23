@@ -176,7 +176,7 @@ router.post("/competitions/rankings", async (req, res) => {
 
     let url = `${aiaApiBaseUrl}/rankings/competitions/${competitionId}/seasons/${seasonId}`;
 
-    if (startRound && endRound) {
+    if (startRound && startRound !== "" && endRound && endRound !== "") {
       url += `?start_round=${startRound}&end_round=${endRound}`;
       if (poolId && poolId !== "all") {
         url += `&id_pool=${poolId}`;
@@ -200,18 +200,19 @@ router.post("/competitions/rankings", async (req, res) => {
 // Route to fetch the home/away rankings for a specific competition and season
 router.post("/competitions/homeAwayRankings", async (req, res) => {
   try {
-    const { apiKey, competitionId, seasonId, homeAway, startRound, endRound, poolId } = req.body;
+    const { apiKey, competitionId, seasonId, startRound, endRound, poolId, homeAway } = req.body;
 
-    if (!apiKey || !competitionId || !seasonId || !homeAway) {
+    if (!apiKey || !competitionId || !seasonId || !homeAway || !poolId) {
       return res.status(400).json({ message: "Missing required parameters." });
     }
 
     let url = `${aiaApiBaseUrl}/rankings/competitions/${competitionId}/seasons/${seasonId}/home_away?home_away=${homeAway}`;
 
-    if (startRound && endRound) {
+    if (startRound !== "" && endRound !== "") {
       url += `&start_round=${startRound}&end_round=${endRound}`;
+
     }
-    if (poolId && poolId !== "all") {
+    if (poolId !== "all") {
       url += `&id_pool=${poolId}`;
     }
 
@@ -223,7 +224,39 @@ router.post("/competitions/homeAwayRankings", async (req, res) => {
 
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ message: "An error occurred while fetching the Home/Away Rankings.", error: error.message });
+    res.status(500).json({ message: "An error occurred while fetching the Home/Away Rankings.", error: error });
+  }
+});
+
+// Route to fetch the britanic rankings for a specific competition and season
+router.post("/competitions/britanicRanking", async (req, res) => {
+  try {
+    const { apiKey, competitionId, seasonId, startRound, endRound, poolId } = req.body;
+
+    if (!apiKey || !competitionId || !seasonId) {
+      return res.status(400).json({ message: "Missing required parameters." });
+    }
+
+    let url = `${aiaApiBaseUrl}/rankings/competitions/${competitionId}/seasons/${seasonId}/brit_ranking`;
+    if (startRound && startRound !== "" && endRound && endRound !== "") {
+      url += `?start_round=${startRound}&end_round=${endRound}`;
+      if (poolId && poolId !== "all") {
+        url += `&id_pool=${poolId}`;
+      }
+    } else if (poolId && poolId !== "all") {
+      url += `?id_pool=${poolId}`;
+    }
+
+
+    const response = await axios.get(url, {
+      headers: {
+        "Ocp-Apim-Subscription-Key": apiKey,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the Britanic Rankings.", error: error.message });
   }
 });
 
