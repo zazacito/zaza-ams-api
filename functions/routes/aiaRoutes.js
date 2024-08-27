@@ -323,4 +323,51 @@ router.post("/competitions/aggregatedReport", async (req, res) => {
   }
 });
 
+
+// Route to fetch the team details
+router.post("/teams/details", async (req, res) => {
+  try {
+    const { apiKey, teamId } = req.body;
+
+    if (!apiKey || !teamId) {
+      return res.status(400).json({ message: "Missing required parameters." });
+    }
+
+    const url = `${aiaApiBaseUrl}/teams/${teamId}`;
+
+    const response = await axios.get(url, {
+      headers: {
+        "Ocp-Apim-Subscription-Key": apiKey,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the team details.", error: error.message });
+  }
+});
+
+// Route to fetch the team matches
+router.post("/teams/matches", async (req, res) => {
+  try {
+    const { apiKey, teamId } = req.body;
+
+    if (!apiKey || !teamId) {
+      return res.status(400).json({ message: "Missing required parameters." });
+    }
+
+    const url = `${aiaApiBaseUrl}/matches?id_team=${teamId}&order_by=DESC`;
+
+    const response = await axios.get(url, {
+      headers: {
+        "Ocp-Apim-Subscription-Key": apiKey,
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while fetching the team matches.", error: error.message });
+  }
+});
+
 module.exports = router;
