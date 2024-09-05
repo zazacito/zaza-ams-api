@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-const aiaApiBaseUrl = "https://aiamgmt.azure-api.net/aiacode-client";
+const aiaApiBaseUrl = "https://backend.aiasports.fr/api";
 
 // Route to fetch the list of competitions
 router.post("/competitions/list", async (req, res) => {
