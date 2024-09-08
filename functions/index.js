@@ -5,6 +5,7 @@ const cors = require("cors");
 const valdRoutes = require('./routes/valdRoutes');
 const catapultRoutes = require('./routes/catapultRoutes');
 const aiaRoutes = require('./routes/aiaRoutes')
+const helpersRoutes = require('./routes/helperRoutes')
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cors({
 app.use('/vald', valdRoutes);
 app.use('/catapult', catapultRoutes);
 app.use('/aia', aiaRoutes)
+app.use("/helpers", helpersRoutes);
 
 
 app.get("/", (req, res) => {
