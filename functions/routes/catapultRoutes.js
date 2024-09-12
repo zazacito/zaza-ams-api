@@ -152,7 +152,7 @@ router.post("/sessioneventsdata", async (req, res) => {
     sdk.server("https://connect-eu.catapultsports.com/api/v6");
 
     const { data } = await sdk.getEventsDataForAthleteInActivity({
-      event_types: 'rugby_union_contact_involvement,rugby_league_tackle,rugby_union_kick',
+      event_types: 'rugby_union_contact_involvement,rugby_league_tackle,rugby_union_kick,rugby_union_lineout,rugby_union_scrum',
       activity_id: sessionId,
       athlete_id: athleteId,
     })
