@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
-
+const crypto = require('crypto');
 
 router.post('/imageFromBlob/toPng', async (req, res) => {
   try {
@@ -84,4 +84,68 @@ router.post('/fetchJson', async (req, res) => {
     }
   }
 });
+
+
+const secret = 'My name is Maximus Decimus Meridius, Commander of the Armies of the North, General of the Felix Legions, loyal servant to the true emperor, Marcus Aurelius. Father to a murdered son, husband to a murdered wife. And I will have my vengeance, in this life or the next.';
+// Webhook handler
+
+router.post('/webhook-handler', express.json(), (req, res) => {
+  const signature = req.headers['x-webhook-signature'];
+  const body = JSON.stringify(req.body);
+
+  // Verify the signature using the secret key
+  const hash = crypto.createHmac('sha256', secret).update(body).digest('hex');
+
+  if (signature !== hash) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  // Extract data from the webhook payload
+  const { system, customer, topic, action, trigger } = req.body;
+
+  // Prepare the email content
+  const subject = `Activity Updated: ${trigger.id}`;
+  const content = `
+    <h2>Activity Update Notification</h2>
+    <p><strong>Activity ID:</strong> ${trigger.id}</p>
+    <p><strong>Customer:</strong> ${customer.name}</p>
+    <p><strong>Action:</strong> ${action}</p>
+    <p><strong>Updated Fields:</strong> ${trigger.updated.join(', ')}</p>
+    <br/>
+    <p>This update was triggered by the system:</p>
+    <p><strong>Provider:</strong> ${system.provider}</p>
+    <p><strong>Service:</strong> ${system.service}</p>
+    <p><strong>Host:</strong> ${system.host.name}</p>
+  `;
+
+  // Setup email options
+  var mailOptions = {
+    from: 'victor.azalbert@yahoo.fr',
+    to: 'victor.azalbert@yahoo.fr', // Recipients
+    subject: subject,
+    text: `
+      Activity Update Notification:
+      - Activity ID: ${trigger.id}
+      - Customer: ${customer.name}
+      - Action: ${action}
+      - Updated Fields: ${trigger.updated.join(', ')}
+      This update was triggered by the system:
+      - Provider: ${system.provider}
+      - Service: ${system.service}
+      - Host: ${system.host.name}
+    `,
+    html: content // HTML version of the email
+  };
+
+  // Send the email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+      return res.status(500).send('Error sending email');
+    }
+    console.log('Email sent:', info.response);
+    res.status(200).send('Webhook processed and email sent');
+  });
+});
+
 module.exports = router;
