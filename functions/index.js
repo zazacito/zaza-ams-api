@@ -69,7 +69,6 @@ exports.sendEmailOnObservationCreate = functions.firestore
     // Send the email
     try {
       let info = await transporter.sendMail(mailOptions);
-      console.log('Email sent: ' + info.response);
     } catch (error) {
       console.error('Error sending email:', error);
     }

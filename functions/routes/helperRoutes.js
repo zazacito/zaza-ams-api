@@ -143,7 +143,6 @@ router.post('/webhook-handler', express.json(), (req, res) => {
       console.error('Error sending email:', error);
       return res.status(500).send('Error sending email');
     }
-    console.log('Email sent:', info.response);
     res.status(200).send('Webhook processed and email sent');
   });
 });

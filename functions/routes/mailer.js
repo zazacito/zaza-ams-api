@@ -31,10 +31,8 @@ router.post('/sendEmail', async (req, res) => {
     // Send the email
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
-        console.log('Error sending email:', error);
         return res.status(500).json({ message: 'Error sending email.', error: error.toString() });
       } else {
-        console.log('Email sent: ' + info.response);
         return res.status(200).json({ message: 'Email sent successfully!', info: info.response });
       }
     });
