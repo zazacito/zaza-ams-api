@@ -41,6 +41,58 @@ var transporter = nodemailer.createTransport({
   }
 });
 
+
+exports.sendEmailOnObservationCreate = functions.firestore
+  .document('observations/{docId}')
+  .onCreate(async (snap, context) => {
+    const newObservation = snap.data();
+
+    // Check if the organisationId matches the specific value
+    if (newObservation.organisationId === "78ynWCmVnxlAREd0Fbjw") {
+
+      // Define the recipients, subject, and content of the email
+      const recipients = [
+        'prosportconcept@gmail.com',
+        'victor.azalbert@yahoo.fr',
+        'sebastien.louisp@outlook.fr',
+        'jeanfredericdubois40@gmail.com',
+        'pierre@sportim.fr',
+        'l.sempe64@gmail.com',
+        'remycasa@hotmail.com',
+        'sequegermain@gmail.com',
+        'benjaminpecastaing@yahoo.fr',
+        'puyobrauclaude@gmail.com'
+      ]; // Add multiple recipients here
+      const subject = `Nouvelle Observation Créé Au Sujet De: ${newObservation.athleteName || 'Untitled'} ${newObservation.athleteSurname || 'Untitled'}`;
+
+      const content = `
+        <h2>Nouvelle Observation Créée <strong>Au Sujet De :</strong> ${newObservation.athleteName || 'Untitled'} ${newObservation.athleteSurname || 'Untitled'}</h2>
+        <p><strong>Observation : ${newObservation.observation || 'No observation provided'} </strong></p>
+        <p><strong>Créé par :</strong> ${newObservation.createdBy.userName || 'Unknown'} ${newObservation.createdBy.userSurname || 'Unknown'}</p>
+        <p><strong>Date de Création :</strong> ${new Date().toLocaleString('fr-FR')}</p>
+      `;
+
+      // Setup email options
+      var mailOptions = {
+        from: 'victor.azalbert@yahoo.fr', // Replace with your email
+        to: recipients.join(', '), // Join the array into a comma-separated string
+        subject: subject,
+        text: content.replace(/<[^>]+>/g, ''), // Fallback plain text version by stripping HTML tags
+        html: content // HTML version of the email
+      };
+
+      // Send the email
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (error) {
+        console.error('Error sending email:', error);
+      }
+    } else {
+      console.log(`Observation with organisationId ${newObservation.organisationId} does not match the specified organisationId. Email not sent.`);
+    }
+  });
+
+
 exports.sendEmailOnObservationCreate = functions.firestore
   .document('observations/{docId}')
   .onCreate(async (snap, context) => {
