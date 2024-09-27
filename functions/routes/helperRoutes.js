@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 const crypto = require('crypto');
+const xml2js = require('xml2js');
 
 router.post('/imageFromBlob/toPng', async (req, res) => {
   try {
@@ -50,6 +51,64 @@ router.post('/imageFromBlob/toBlob', async (req, res) => {
     res.status(500).send('Error fetching image');
   }
 });
+
+
+
+router.post('/fetchXmlInstances', async (req, res) => {
+  try {
+    const { xmlUrl } = req.body;
+
+    if (!xmlUrl) {
+      return res.status(400).json({ message: 'Missing required parameters.' });
+    }
+
+    // Fetch the XML file from the provided URL
+    const response = await axios.get(xmlUrl, {
+      responseType: 'text' // Ensure the response is treated as text
+    });
+
+    // Parse the XML into JSON
+    const parser = new xml2js.Parser({ explicitArray: false });
+    parser.parseString(response.data, (err, result) => {
+      if (err) {
+        console.error('Error parsing XML:', err);
+        return res.status(500).send('Error parsing XML.');
+      }
+
+      // Navigate to the instances
+      // Assuming the structure is file > ALL_INSTANCES > instance
+      let instances = [];
+      if (result && result.file && result.file.ALL_INSTANCES && result.file.ALL_INSTANCES.instance) {
+        const instanceData = result.file.ALL_INSTANCES.instance;
+        // Handle both single and multiple instances
+        if (Array.isArray(instanceData)) {
+          instances = instanceData;
+        } else {
+          instances = [instanceData];
+        }
+      } else {
+        console.error('No instances found in the XML.');
+        return res.status(404).send('No instances found in the XML.');
+      }
+
+      // Return the instances as a JSON array
+      res.json(instances);
+    });
+  } catch (error) {
+    console.error('Error fetching XML from blob storage:', error);
+
+    // Provide more specific error messages
+    if (error.response) {
+      res.status(error.response.status).send(`Error fetching XML: ${error.response.statusText}`);
+    } else if (error.request) {
+      res.status(500).send('No response from blob storage server.');
+    } else {
+      res.status(500).send('Error setting up request to fetch XML.');
+    }
+  }
+});
+
+module.exports = router;
 
 
 
