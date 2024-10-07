@@ -55,13 +55,13 @@ exports.sendEmailOnObservationCreate = functions.firestore
         'prosportconcept@gmail.com',
         'victor.azalbert@yahoo.fr',
         'sebastien.louisp@outlook.fr',
-        'jeanfredericdubois40@gmail.com',
+        // 'jeanfredericdubois40@gmail.com',
         'pierre@sportim.fr',
         'l.sempe64@gmail.com',
         'remycasa@hotmail.com',
         'sequegermain@gmail.com',
         'benjaminpecastaing@yahoo.fr',
-        'puyobrauclaude@gmail.com'
+        // 'puyobrauclaude@gmail.com'
       ]; // Add multiple recipients here
       const subject = `Nouvelle Observation Créé Au Sujet De: ${newObservation.athleteName || 'Untitled'} ${newObservation.athleteSurname || 'Untitled'}`;
 
