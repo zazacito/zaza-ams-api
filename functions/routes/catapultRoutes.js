@@ -3,20 +3,6 @@ const sdk = require('api')('@catapultconnect/v6#dgos2allogj3z8');
 const axios = require('axios');
 const router = express.Router();
 
-router.post("/sessions", async (req, res) => {
-  try {
-    const { startTime, endTime, apiKey } = req.body;
-    sdk.auth(apiKey);
-    sdk.server("https://connect-eu.catapultsports.com/api/v6");
-
-    const { data } = await sdk.getAllActivities({ start_time: startTime, end_time: endTime })
-
-    res.json(data);
-
-  } catch (error) {
-    res.status(500).json({ message: "An error occurred while fetching the session raw data.", error: error });
-  }
-});
 
 
 router.post("/sessions", async (req, res) => {
@@ -66,6 +52,44 @@ router.post("/sessionperioddata", async (req, res) => {
   }
 });
 
+router.post('/sessionspecifiedannotationdata', async (req, res) => {
+  try {
+    const { sessionId, parameters, apiKey, annotationsNames } = req.body;
+
+    let filters = [
+      {
+        "name": "activity_id",
+        "comparison": "=",
+        "values": [sessionId],
+      }];
+    if (annotationsNames.length > 0) {
+      filters.push({
+        "name": "annotation_name",
+        "comparison": "=",
+        "values": annotationsNames,
+      });
+    }
+    axios
+      .post(`https://connect-eu.catapultsports.com/api/v6/stats`,
+        {
+          "group_by": ["annotation", "athlete"],
+          "filters": filters,
+          "parameters": parameters,
+          "source": "annotation_stats"
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`
+          }
+        })
+      .then((response) => {
+        res.json(response.data);
+      })
+
+  } catch (error) {
+    res.status(500).json({ message: 'An error occurred while fetching the annotation session data.', error: error.message });
+  }
+});
 router.post('/sessionannotationdata', async (req, res) => {
   try {
     const { sessionId, parameters, apiKey } = req.body;
